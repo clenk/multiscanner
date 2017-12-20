@@ -1,5 +1,5 @@
 FROM python:3.6
-MAINTAINER Austin West awest1339
+LABEL maintainer="Austin West awest1339"
 
 ENV PYTHON_VER 3.6.2
 
@@ -10,4 +10,5 @@ WORKDIR /opt/multiscanner
 RUN ./install.sh
 
 # Run script
+EXPOSE 8000
 CMD python web/app.py

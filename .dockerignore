@@ -1,0 +1,7 @@
+.git
+.gitignore
+.dockerignore
+docker-compose.yml
+tox.ini
+.travis.yml
+tests/

@@ -17,7 +17,9 @@ if [ -e /etc/debian_version ]; then
 fi
 
 #Install requirements for Python
-curl -k https://bootstrap.pypa.io/get-pip.py | python
+if ! [ -x "$(command -v pip)" ]; then
+  curl -k https://bootstrap.pypa.io/get-pip.py | python
+fi
 pip install --upgrade -r $DIR/requirements.txt
 
 
@@ -90,7 +92,7 @@ if [[ $prompt == "y" ]]; then
   echo You can update these signatures by running cd $DIR/etc/yarasigs/Icewater \&\& git pull
 fi
 
-read -p "Would you me to download the NSRL database? This will take ~4GB of disk space. <y/N> " prompt
+read -p "Would you like me to download the NSRL database? This will take ~4GB of disk space. <y/N> " prompt
 if [[ $prompt == "y" ]]; then
   # Download the unique set
   curl -k https://s3.amazonaws.com/rds.nsrl.nist.gov/RDS/current/rds_modernu.zip > rds_modernu.zip
