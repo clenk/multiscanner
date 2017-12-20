@@ -1,13 +1,41 @@
 FROM httpd:2.4
-MAINTAINER Austin West awest1339
+LABEL maintainer="Austin West awest1339"
 
-ENV PYTHON_VER 3.6.2
+# Add Prereqs:  Python3, mod_wsgi, etc.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        python3-dev \
+        curl \
+        git \
+        build-essential \
+        libpq-dev \
+        # OPENSSL_VERSION is set in the httpd Dockerfile
+        libssl-dev=$OPENSSL_VERSION \
+    && rm -rf /var/lib/apt/lists/* \
+    && cd /usr/bin \
+    && ln -s python3 python \
+    && ln -s pip3 pip \
+    && pip install --upgrade pip setuptools mod_wsgi \
+    && mod_wsgi-express install-module
 
-COPY ../.. /opt/multiscanner
-COPY ./docker/standalone/*.ini /opt/multiscanner/
+# Copy in required files
+COPY . /opt/multiscanner
+COPY ./docker/distributed/*.ini /opt/multiscanner/
+COPY ./docker/distributed/mscan_web.wsgi /opt/multiscanner/web/mscan_web.wsgi
+COPY ./docker/distributed/mscan_web.conf /tmp/mscan_web.conf
 
-WORKDIR /opt/multiscanner
-RUN ./install.sh
+# Configure Apache, install MultiScanner
+RUN cat /tmp/mscan_web.conf >> /usr/local/apache2/conf/httpd.conf \
+    && rm /tmp/mscan_web.conf \
+    # Create web log directory
+    && mkdir /var/log/mscanweb \
+    # Create and use a mod_wsgi run directory
+    && mkdir /var/run/wsgi \
+    && echo "WSGISocketPrefix /var/run/wsgi" >> /usr/local/apache2/conf/httpd.conf \
+    #Install MultiScanner
+    && /opt/multiscanner/install.sh
 
-# Run script
-CMD python web/app.py
+# Start Apache
+EXPOSE 80
+CMD ["httpd-foreground"]
