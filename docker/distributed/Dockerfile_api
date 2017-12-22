@@ -22,23 +22,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy in required files
 COPY . /opt/multiscanner
 COPY ./docker/distributed/*.ini /opt/multiscanner/
-COPY ./docker/distributed/mscan_web.wsgi /opt/multiscanner/web/mscan_web.wsgi
-COPY ./docker/distributed/mscan_web.conf /tmp/mscan_web.conf
+COPY ./docker/distributed/mscan_rest.wsgi /opt/multiscanner/utils/mscan_rest.wsgi
+COPY ./docker/distributed/mscan_rest.conf /tmp/mscan_rest.conf
 
 # Configure Apache, install MultiScanner
-RUN cat /tmp/mscan_web.conf >> /usr/local/apache2/conf/httpd.conf \
-    && rm /tmp/mscan_web.conf \
+RUN cat /tmp/mscan_rest.conf >> /usr/local/apache2/conf/httpd.conf \
+    && rm /tmp/mscan_rest.conf \
     # Create web log directory
-    && mkdir /var/log/mscanweb \
+    && mkdir /var/log/mscanrest \
     # Create and use a mod_wsgi run directory
     && mkdir /var/run/wsgi \
     && echo "WSGISocketPrefix /var/run/wsgi" >> /usr/local/apache2/conf/httpd.conf \
-    #Install MultiScanner
+    # Install MultiScanner
     && /opt/multiscanner/install.sh \
     # Tell Apache where mod_wsgi is
     && MOD_WSGI_LOCATION=$(mod_wsgi-express module-config | grep wsgi_module | cut -d '"' -f2) \
-    && sed -i -r "s;\{\{ mod_wsgi_system_module \}\};$MOD_WSGI_LOCATION;g" /usr/local/apache2/conf/httpd.conf
+    && sed -i -r "s;\{\{ mod_wsgi_system_module \}\};$MOD_WSGI_LOCATION;g" /usr/local/apache2/conf/httpd.conf \
+    # Set CORS regex
+    && API_CORS_REGEX=$(grep cors /opt/multiscanner/api_config.ini | cut -d ' ' -f3 | cut -d '(' -f1) \
+    && sed -i -r "s;\{\{ ms_api_cors_regex \}\};$API_CORS_REGEX;g" /usr/local/apache2/conf/httpd.conf \
+    # Enable the rewrite module (needed for CORS)
+    && sed -i 's/#LoadModule rewrite_module/LoadModule rewrite_module/' /usr/local/apache2/conf/httpd.conf \
+    # Give apache ownership of the multiscanner directory
+    && chown -R daemon:daemon /opt/multiscanner
 
 # Start Apache
-EXPOSE 80
+EXPOSE 8080
 CMD ["httpd-foreground"]
