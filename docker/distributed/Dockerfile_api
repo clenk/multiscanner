@@ -43,6 +43,8 @@ RUN cat /tmp/mscan_rest.conf >> /usr/local/apache2/conf/httpd.conf \
     && sed -i -r "s;\{\{ ms_api_cors_regex \}\};$API_CORS_REGEX;g" /usr/local/apache2/conf/httpd.conf \
     # Enable the rewrite module (needed for CORS)
     && sed -i 's/#LoadModule rewrite_module/LoadModule rewrite_module/' /usr/local/apache2/conf/httpd.conf \
+    # Tell Apache to listen on correct port
+    && sed -i -r "s/Listen 80/Listen 8080/" /usr/local/apache2/conf/httpd.conf \
     # Give apache ownership of the multiscanner directory
     && chown -R daemon:daemon /opt/multiscanner
 
