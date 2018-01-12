@@ -1,10 +1,10 @@
 [api]
 host = 0.0.0.0
-port = 8080
+port = {{ getenv "MS_API_PORT" }}
 upload_folder = /tmp/
 distributed = False
 web_loc = http://msweb:80/
-cors = https?://localhost(:\d+)?
+cors = {{ getenv "MS_API_CORS_REGEX" }}(:\d+)?
 batch_size = 100
 batch_interval = 2
 

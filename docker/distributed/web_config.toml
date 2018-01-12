@@ -1,0 +1,3 @@
+[template]
+src = "web_config.ini.tmpl"
+dest = "/opt/multiscanner/web_config.ini"

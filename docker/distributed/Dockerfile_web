@@ -1,7 +1,7 @@
 FROM httpd:2.4
 LABEL maintainer="Austin West awest1339"
 
-# Add Prereqs: Python3, mod_wsgi, etc.
+# Add Prereqs: Python3, mod_wsgi, confd, etc.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 \
         python3-pip \
@@ -17,17 +17,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -s python3 python \
     && ln -s pip3 pip \
     && pip install --upgrade pip setuptools mod_wsgi \
-    && mod_wsgi-express install-module
+    && mod_wsgi-express install-module \
+    && mkdir -p /opt/confd/bin \
+    && curl -L https://github.com/kelseyhightower/confd/releases/download/v0.14.0/confd-0.14.0-linux-amd64 -o /opt/confd/bin/confd \
+    && chmod +x /opt/confd/bin/confd
+
+ENV PATH="${PATH}:/opt/confd/bin"
 
 # Copy in required files
 COPY . /opt/multiscanner
 COPY ./docker/distributed/*.ini /opt/multiscanner/
-COPY ./docker/distributed/mscan_web.wsgi /opt/multiscanner/web/mscan_web.wsgi
-COPY ./docker/distributed/mscan_web.conf /tmp/mscan_web.conf
+COPY ./docker/distributed/mscan_web.* /opt/multiscanner/web/
 
 # Configure Apache, install MultiScanner
-RUN cat /tmp/mscan_web.conf >> /usr/local/apache2/conf/httpd.conf \
-    && rm /tmp/mscan_web.conf \
+RUN cat /opt/multiscanner/web/mscan_web.conf >> /usr/local/apache2/conf/httpd.conf \
+    && rm /opt/multiscanner/web/mscan_web.conf \
     # Create web log directory
     && mkdir /var/log/mscanweb \
     # Create and use a mod_wsgi run directory
@@ -41,4 +45,5 @@ RUN cat /tmp/mscan_web.conf >> /usr/local/apache2/conf/httpd.conf \
 
 # Start Apache
 EXPOSE 80
+ENTRYPOINT ["/opt/multiscanner/utils/mscan_web.sh"]
 CMD ["httpd-foreground"]

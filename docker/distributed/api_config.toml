@@ -1,0 +1,3 @@
+[template]
+src = "api_config.ini.tmpl"
+dest = "/opt/multiscanner/api_config.ini"
