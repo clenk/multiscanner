@@ -3,6 +3,5 @@ HOST = 0.0.0.0
 PORT = 80
 API_LOC = http://msrest:8080
 DEBUG = False
-METADATA_FIELDS = ['Submitter Name', 'Submission Description', 'Submitter Email', 'Submitter Organization', 'Submitter Phone']
-TAGS = ['Malware', 'Benign']
-
+METADATA_FIELDS = {{ getenv "MS_WEB_METADATA_FIELDS" }}
+TAGS = {{ getenv "MS_WEB_TAGS" }}

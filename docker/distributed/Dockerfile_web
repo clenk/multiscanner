@@ -1,6 +1,9 @@
 FROM httpd:2.4
 LABEL maintainer="Austin West awest1339"
 
+ENV MS_WEB_METADATA_FIELDS="['Submitter Name', 'Submission Description', 'Submitter Email', 'Submitter Organization', 'Submitter Phone']" \
+    MS_WEB_TAGS="['Malware', 'Benign']"
+
 # Add Prereqs: Python3, mod_wsgi, confd, etc.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 \
@@ -17,33 +20,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && ln -s python3 python \
     && ln -s pip3 pip \
     && pip install --upgrade pip setuptools mod_wsgi \
-    && mod_wsgi-express install-module \
-    && mkdir -p /opt/confd/bin \
-    && curl -L https://github.com/kelseyhightower/confd/releases/download/v0.14.0/confd-0.14.0-linux-amd64 -o /opt/confd/bin/confd \
-    && chmod +x /opt/confd/bin/confd
+    && mod_wsgi-express install-module
 
-ENV PATH="${PATH}:/opt/confd/bin"
+# Add confd
+ADD https://github.com/kelseyhightower/confd/releases/download/v0.14.0/confd-0.14.0-linux-amd64 /usr/local/bin/confd
+RUN chmod +x /usr/local/bin/confd \
+    && mkdir -p /etc/confd/conf.d /etc/confd/templates
 
 # Copy in required files
 COPY . /opt/multiscanner
-COPY ./docker/distributed/*.ini /opt/multiscanner/
-COPY ./docker/distributed/mscan_web.* /opt/multiscanner/web/
 
 # Configure Apache, install MultiScanner
-RUN cat /opt/multiscanner/web/mscan_web.conf >> /usr/local/apache2/conf/httpd.conf \
-    && rm /opt/multiscanner/web/mscan_web.conf \
+RUN cat /opt/multiscanner/docker/distributed/mscan_web.conf >> /usr/local/apache2/conf/httpd.conf \
+    && rm /opt/multiscanner/docker/distributed/mscan_web.conf \
     # Create web log directory
     && mkdir /var/log/mscanweb \
     # Create and use a mod_wsgi run directory
     && mkdir /var/run/wsgi \
     && echo "WSGISocketPrefix /var/run/wsgi" >> /usr/local/apache2/conf/httpd.conf \
-    #Install MultiScanner
+    # Move bootstrap script because permissions
+    && mv /opt/multiscanner/docker/distributed/mscan_web.sh /opt \
+    # Install MultiScanner
     && /opt/multiscanner/install.sh \
     # Tell Apache where mod_wsgi is
     && MOD_WSGI_LOCATION=$(mod_wsgi-express module-config | grep wsgi_module | cut -d '"' -f2) \
-    && sed -i -r "s;\{\{ mod_wsgi_system_module \}\};$MOD_WSGI_LOCATION;g" /usr/local/apache2/conf/httpd.conf
+    && sed -i -r "s;\{\{ mod_wsgi_system_module \}\};$MOD_WSGI_LOCATION;g" /usr/local/apache2/conf/httpd.conf \
+    # Put files in the right place for confd
+    && mv /opt/multiscanner/docker/distributed/*.toml /etc/confd/conf.d \
+    && mv /opt/multiscanner/docker/distributed/*.ini.tmpl /etc/confd/templates
 
 # Start Apache
 EXPOSE 80
-ENTRYPOINT ["/opt/multiscanner/utils/mscan_web.sh"]
+ENTRYPOINT ["/opt/mscan_web.sh"]
 CMD ["httpd-foreground"]

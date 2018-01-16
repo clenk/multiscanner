@@ -1,12 +1,12 @@
 [api]
 host = 0.0.0.0
-port = {{ getenv "MS_API_PORT" }}
+port = {{ getenv "MS_API_PORT" "8080"}}
 upload_folder = /tmp/
 distributed = False
 web_loc = http://msweb:80/
-cors = {{ getenv "MS_API_CORS_REGEX" }}(:\d+)?
-batch_size = 100
-batch_interval = 2
+cors = {{ getenv "MS_API_CORS_REGEX" "https?://localhost"}}(:\d+)?
+batch_size = {{ getenv "MS_API_BATCH_SIZE" "100" }}
+batch_interval = {{ getenv "MS_API_BATCH_INTERVAL" "2" }}
 
 [celery]
 protocol = pyamqp
@@ -14,8 +14,8 @@ host = localhost
 user = guest
 password = 
 vhost = /
-flush_every = 100
-flush_interval = 10
+flush_every = {{ getenv "MS_CELERY_FLUSH_EVERY" "100" }}
+flush_interval = {{ getenv "MS_CELERY_FLUSH_INTERVAL" "10" }}
 
 [Database]
 db_type = sqlite
