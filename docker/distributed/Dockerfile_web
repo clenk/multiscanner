@@ -4,7 +4,7 @@ LABEL maintainer="Austin West awest1339"
 ENV MS_WEB_METADATA_FIELDS="['Submitter Name', 'Submission Description', 'Submitter Email', 'Submitter Organization', 'Submitter Phone']" \
     MS_WEB_TAGS="['Malware', 'Benign']"
 
-# Add Prereqs: Python3, mod_wsgi, confd, etc.
+# Add Prereqs: Python3, mod_wsgi, etc.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 \
         python3-pip \

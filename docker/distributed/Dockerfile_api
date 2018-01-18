@@ -2,7 +2,7 @@ FROM httpd:2.4
 LABEL maintainer="Austin West awest1339"
 
 ENV MS_API_PORT=8080 \
-    MS_API_CORS_REGEX="https?://localhost"
+    MS_API_CORS_REGEX="https?://msweb"
 
 # Add Prereqs: Python3, mod_wsgi, etc.
 RUN apt-get update && apt-get install -y --no-install-recommends \

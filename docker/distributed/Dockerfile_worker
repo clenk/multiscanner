@@ -1,0 +1,26 @@
+FROM python:3
+LABEL maintainer="Austin West awest1339"
+
+# Copy in required files
+COPY . /opt/multiscanner
+
+# Add confd, install MultiScanner
+ADD https://github.com/kelseyhightower/confd/releases/download/v0.14.0/confd-0.14.0-linux-amd64 /usr/local/bin/confd
+RUN chmod +x /usr/local/bin/confd \
+    && mkdir -p /etc/confd/conf.d /etc/confd/templates \
+    # Put files in the right place for confd
+    && mv /opt/multiscanner/docker/distributed/*.toml /etc/confd/conf.d \
+    && mv /opt/multiscanner/docker/distributed/*.ini.tmpl /etc/confd/templates \
+    # Install MultiScanner
+    && /opt/multiscanner/install.sh \
+    # Move bootstrap script because permissions
+    && mv /opt/multiscanner/docker/distributed/mscan_worker.sh /opt \
+    # Add non-root user
+    && groupadd -r multiscanner \
+    && useradd -m -g multiscanner -s /sbin/nologin -c "MultiScanner user" multiscanner \
+    && chown -R multiscanner:multiscanner /opt/multiscanner
+
+USER multiscanner
+WORKDIR /opt/multiscanner/utils/
+ENTRYPOINT ["/opt/mscan_worker.sh"]
+CMD ["celery -A celery_worker worker"]

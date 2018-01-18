@@ -1,12 +1,12 @@
 [File]
-ENABLED = False
+ENABLED = {{ getenv "MS_STORAGE_FILE_ENABLED" "False"}}
 path = report.json
 gzip = False
 files-per-line = 1
 
 [ElasticSearchStorage]
-ENABLED = True
-host = mselastic
-port = 9200
+ENABLED = {{ getenv "MS_STORAGE_ES_ENABLED" "True"}}
+host = {{ getenv "MS_STORAGE_ES_HOST" "mselastic"}}
+port = {{ getenv "MS_STORAGE_ES_PORT" "9200"}}
 index = multiscanner_reports
 doc_type = report
