@@ -4,4 +4,4 @@
 confd -onetime -backend env
 
 # Run Docker CMD
-bash -c "$@"
+exec $@

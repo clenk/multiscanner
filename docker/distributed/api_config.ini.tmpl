@@ -3,7 +3,7 @@ host = 0.0.0.0
 port = {{ getenv "MS_API_PORT" "8080"}}
 upload_folder = /tmp/
 distributed = {{ getenv "MS_API_DISTRIBUTED" "True"}}
-web_loc = http://msweb:80/
+web_loc = {{ getenv "MS_WEB_LOC" "http://msweb:80/"}}
 cors = {{ getenv "MS_API_CORS_REGEX" "https?://localhost"}}(:\d+)?
 batch_size = {{ getenv "MS_API_BATCH_SIZE" "100" }}
 batch_interval = {{ getenv "MS_API_BATCH_INTERVAL" "2" }}
@@ -18,9 +18,9 @@ flush_every = {{ getenv "MS_CELERY_FLUSH_EVERY" "100" }}
 flush_interval = {{ getenv "MS_CELERY_FLUSH_INTERVAL" "10" }}
 
 [Database]
-db_type = sqlite
-host_string = localhost
-db_name = task_db
-username = multiscanner
-password = CHANGEME
+db_type = postgresql
+host_string = {{ getenv "MS_POSTGRES_HOST" "task_db" }}
+db_name = {{ getenv "MS_POSTGRES_DB" "task_db" }}
+username = {{ getenv "MS_POSTGRES_USER" "multiscanner" }}
+password = {{ getenv "MS_POSTGRES_PASSWORD" "CHANGEME" }}
 
