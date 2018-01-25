@@ -20,7 +20,7 @@ services:
      - "script.painless.regex.enabled=true"
      - "xpack.security.enabled=false"
      - "http.cors.enabled=true"
-     - "http.cors.allow-origin=http://msweb"
+     - "http.cors.allow-origin=http://(msrest|msweb|ms_worker)"
   task_db:
     image: "postgres"
     ports:
@@ -42,9 +42,6 @@ services:
       # args:
       #  - http_proxy
       #  - https_proxy
-      args:
-       - http_proxy
-       - https_proxy
     ports:
      - "15672:15672"
     networks:
@@ -61,13 +58,10 @@ services:
       # args:
       #  - http_proxy
       #  - https_proxy
-      args:
-       - http_proxy
-       - https_proxy
     networks:
      - ms
     volumes:
-     - ms_volume:/tmp
+     - ms_volume:/mnt/samples
     depends_on:
      - task_broker
   msweb:
@@ -79,19 +73,10 @@ services:
       # args:
       #  - http_proxy
       #  - https_proxy
-      args:
-       - http_proxy
-       - https_proxy
     ports:
      - "80:80"
     networks:
      - ms
-    # If you are behind a proxy, you must set the
-    # proxy settings here (uncomment the next 4 lines)
-    # environment:
-    #  - "http_proxy=http://proxy.example:80"
-    #  - "https_proxy=http://proxy.example:80"
-    #  - "no_proxy=localhost,127.0.0.1"
   msrest:
     build:
       context: .
@@ -101,22 +86,14 @@ services:
       # args:
       #  - http_proxy
       #  - https_proxy
-      args:
-       - http_proxy
-       - https_proxy
     ports:
      - "8080:8080"
     networks:
      - ms
     volumes:
-     - ms_volume:/tmp
+     - ms_volume:/mnt/samples
     environment:
      - "MS_API_CORS_REGEX=https?://(localhost|msweb)"
-    # If you are behind a proxy, you must set the
-    # proxy settings here (uncomment the next 3 lines)
-    #  - "http_proxy=http://proxy.example:80"
-    #  - "https_proxy=http://proxy.example:80"
-    #  - "no_proxy=localhost,127.0.0.1"
     depends_on:
      - mselastic
      - task_db

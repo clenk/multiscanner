@@ -1,7 +1,7 @@
 [api]
 host = 0.0.0.0
 port = {{ getenv "MS_API_PORT" "8080"}}
-upload_folder = /tmp/
+upload_folder = {{ getenv "MS_UPLOAD_DIR" "/mnt/samples"}}
 distributed = {{ getenv "MS_API_DISTRIBUTED" "True"}}
 web_loc = {{ getenv "MS_WEB_LOC" "http://msweb:80/"}}
 cors = {{ getenv "MS_API_CORS_REGEX" "https?://localhost"}}(:\d+)?
