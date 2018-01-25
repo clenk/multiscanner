@@ -1,0 +1,128 @@
+version: '3'
+networks:
+  ms:
+volumes:
+  ms_volume:
+  esdata:
+  pgdata:
+services:
+  mselastic:
+    image: "docker.elastic.co/elasticsearch/elasticsearch:5.6.5"
+    ports:
+     - "9200:9200"
+     - "9300:9300"
+    networks:
+     - ms
+    volumes:
+     - esdata:/usr/share/elasticsearch/data
+    environment:
+     - "discovery.type=single-node"
+     - "script.painless.regex.enabled=true"
+     - "xpack.security.enabled=false"
+     - "http.cors.enabled=true"
+     - "http.cors.allow-origin=http://msweb"
+  task_db:
+    image: "postgres"
+    ports:
+     - "5432:5432"
+    networks:
+     - ms
+    volumes:
+     - pgdata:/var/lib/postgresql/data
+    environment:
+     - "POSTGRES_USER=multiscanner"
+     - "POSTGRES_PASSWORD=CHANGEME"
+     - "POSTGRES_DB=task_db"
+  task_broker:
+    build:
+      context: .
+      dockerfile: docker/distributed/Dockerfile_broker
+      # If you are behind a proxy, you must uncomment
+      # the next 3 lines
+      # args:
+      #  - http_proxy
+      #  - https_proxy
+      args:
+       - http_proxy
+       - https_proxy
+    ports:
+     - "15672:15672"
+    networks:
+     - ms
+    environment:
+     - "RABBITMQ_DEFAULT_USER=ms_rabbit"
+     - "RABBITMQ_DEFAULT_PASS=CHANGE_THIS_PASSWORD"
+  ms_worker:
+    build:
+      context: .
+      dockerfile: docker/distributed/Dockerfile_worker
+      # If you are behind a proxy, you must uncomment
+      # the next 3 lines
+      # args:
+      #  - http_proxy
+      #  - https_proxy
+      args:
+       - http_proxy
+       - https_proxy
+    networks:
+     - ms
+    volumes:
+     - ms_volume:/tmp
+    depends_on:
+     - task_broker
+  msweb:
+    build:
+      context: .
+      dockerfile: docker/distributed/Dockerfile_web
+      # If you are behind a proxy, you must uncomment
+      # the next 3 lines
+      # args:
+      #  - http_proxy
+      #  - https_proxy
+      args:
+       - http_proxy
+       - https_proxy
+    ports:
+     - "80:80"
+    networks:
+     - ms
+    # If you are behind a proxy, you must set the
+    # proxy settings here (uncomment the next 4 lines)
+    # environment:
+    #  - "http_proxy=http://proxy.example:80"
+    #  - "https_proxy=http://proxy.example:80"
+    #  - "no_proxy=localhost,127.0.0.1"
+  msrest:
+    build:
+      context: .
+      dockerfile: docker/distributed/Dockerfile_api
+      # If you are behind a proxy, you must uncomment
+      # the next 3 lines
+      # args:
+      #  - http_proxy
+      #  - https_proxy
+      args:
+       - http_proxy
+       - https_proxy
+    ports:
+     - "8080:8080"
+    networks:
+     - ms
+    volumes:
+     - ms_volume:/tmp
+    environment:
+     - "MS_API_CORS_REGEX=https?://(localhost|msweb)"
+    # If you are behind a proxy, you must set the
+    # proxy settings here (uncomment the next 3 lines)
+    #  - "http_proxy=http://proxy.example:80"
+    #  - "https_proxy=http://proxy.example:80"
+    #  - "no_proxy=localhost,127.0.0.1"
+    depends_on:
+     - mselastic
+     - task_db
+     - task_broker
+     - ms_worker
+    # The sleep is a workaround to make extra sure that
+    # the ElasticSearch container is up before the api
+    # attempts to connect to it
+    command: ["sleep 40; httpd-foreground"]
