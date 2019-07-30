@@ -1,5 +1,5 @@
 FROM alpine
-MAINTAINER Patrick Copeland ptcnop
+LABEL maintainer="Patrick Copeland ptcnop"
 
 ENV YARA_VERSION 3.8.1
 ENV YARA_PY_VERSION 3.8.1

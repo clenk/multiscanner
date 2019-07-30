@@ -19,7 +19,9 @@ if [ -e /etc/debian_version ]; then
 fi
 
 # Install multiscanner library and dependencies
-curl -k https://bootstrap.pypa.io/get-pip.py | python
+if ! [ -x "$(command -v pip)" ]; then
+  curl -k https://bootstrap.pypa.io/get-pip.py | python
+fi
 pip install --upgrade $DIR
 
 #Code to compile and install yara

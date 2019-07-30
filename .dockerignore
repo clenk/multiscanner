@@ -1,0 +1,9 @@
+.git
+.gitignore
+.dockerignore
+docker-compose.yml
+docs/
+multiscanner/tests/
+.pre-commit-config.yaml
+tox.ini
+.travis.yml
